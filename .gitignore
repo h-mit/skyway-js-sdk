@@ -181,7 +181,7 @@ tramp
 .cask/
 
 # Distribution (built) files
-/dist/
+# /dist/
 
 # JSDocs
 docs
