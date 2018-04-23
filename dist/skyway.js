@@ -7140,11 +7140,6 @@ var Peer = function (_EventEmitter) {
       return _possibleConstructorReturn(_this);
     }
 
-    if (!_util2.default.validateKey(options.key)) {
-      _this._abort('invalid-key', 'API KEY "' + _this.options.key + '" is invalid');
-      return _possibleConstructorReturn(_this);
-    }
-
     if (_this.options.host === '/') {
       _this.options.host = window.location.hostname;
     }

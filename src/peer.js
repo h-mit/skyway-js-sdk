@@ -82,11 +82,6 @@ class Peer extends EventEmitter {
       return;
     }
 
-    if (!util.validateKey(options.key)) {
-      this._abort('invalid-key', `API KEY "${this.options.key}" is invalid`);
-      return;
-    }
-
     if (this.options.host === '/') {
       this.options.host = window.location.hostname;
     }
