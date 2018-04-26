@@ -1771,7 +1771,7 @@ var TURN_PORT = 443;
 
 var MESSAGE_TYPES = {
   CLIENT: new _enum2.default(['SEND_OFFER', 'SEND_ANSWER', 'SEND_CANDIDATE', 'SEND_LEAVE', 'ROOM_JOIN', 'ROOM_LEAVE', 'ROOM_GET_LOGS', 'ROOM_GET_USERS', 'ROOM_SEND_DATA', 'SFU_GET_OFFER', 'SFU_ANSWER', 'SFU_CANDIDATE', 'PING', 'UPDATE_CREDENTIAL']),
-  SERVER: new _enum2.default(['OPEN', 'ERROR', 'OFFER', 'ANSWER', 'CANDIDATE', 'LEAVE', 'AUTH_EXPIRES_IN', 'ROOM_LOGS', 'ROOM_USERS', 'ROOM_DATA', 'ROOM_USER_JOIN', 'ROOM_USER_LEAVE', 'SFU_OFFER'])
+  SERVER: new _enum2.default(['OPEN', 'ERROR', 'OFFER', 'ANSWER', 'CANDIDATE', 'LEAVE', 'AUTH_EXPIRES_IN', 'ROOM_LOGS', 'ROOM_USERS', 'ROOM_DATA', 'ROOM_USER_JOIN', 'ROOM_USER_LEAVE', 'SFU_OFFER', 'UPDATE_ADMINS', 'UPDATE_OPERATORS', 'UPDATE_WORKERS'])
 };
 
 // Current recommended maximum chunksize is 16KB (DataChannel spec)
@@ -7072,7 +7072,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var PeerEvents = new _enum2.default(['open', 'error', 'call', 'connection', 'expiresin', 'close', 'disconnected']);
+var PeerEvents = new _enum2.default(['open', 'error', 'call', 'connection', 'expiresin', 'close', 'disconnected', 'admins', 'operators', 'workers']);
 
 /**
  * Class that manages all p2p connections and rooms.
@@ -7802,6 +7802,18 @@ var Peer = function (_EventEmitter) {
           room.updateMsidMap(offerMessage.msids);
           room.handleOffer(offerMessage);
         }
+      });
+
+      this.socket.on(_config2.default.MESSAGE_TYPES.SERVER.UPDATE_ADMINS.key, function (message) {
+        _this3.emit(Peer.EVENTS.admins.key, message.admins);
+      });
+
+      this.socket.on(_config2.default.MESSAGE_TYPES.SERVER.UPDATE_OPERATORS.key, function (message) {
+        _this3.emit(Peer.EVENTS.operators.key, message.operators);
+      });
+
+      this.socket.on(_config2.default.MESSAGE_TYPES.SERVER.UPDATE_WORKERS.key, function (message) {
+        _this3.emit(Peer.EVENTS.workers.key, message.workers);
       });
     }
 

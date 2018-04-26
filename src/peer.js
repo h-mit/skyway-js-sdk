@@ -19,6 +19,9 @@ const PeerEvents = new Enum([
   'expiresin',
   'close',
   'disconnected',
+  'admins',
+  'operators',
+  'workers',
 ]);
 
 /**
@@ -697,6 +700,18 @@ class Peer extends EventEmitter {
         room.updateMsidMap(offerMessage.msids);
         room.handleOffer(offerMessage);
       }
+    });
+
+    this.socket.on(config.MESSAGE_TYPES.SERVER.UPDATE_ADMINS.key, message => {
+      this.emit(Peer.EVENTS.admins.key, message.admins);
+    });
+
+    this.socket.on(config.MESSAGE_TYPES.SERVER.UPDATE_OPERATORS.key, message => {
+      this.emit(Peer.EVENTS.operators.key, message.operators);
+    });
+
+    this.socket.on(config.MESSAGE_TYPES.SERVER.UPDATE_WORKERS.key, message => {
+      this.emit(Peer.EVENTS.workers.key, message.workers);
     });
   }
 

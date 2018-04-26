@@ -39,6 +39,9 @@ const MESSAGE_TYPES = {
     'ROOM_USER_JOIN',
     'ROOM_USER_LEAVE',
     'SFU_OFFER',
+    'UPDATE_ADMINS',
+    'UPDATE_OPERATORS',
+    'UPDATE_WORKERS',
   ]),
 };
 
