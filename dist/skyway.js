@@ -1770,8 +1770,8 @@ var TURN_HOST = 'turn.webrtc.ecl.ntt.com';
 var TURN_PORT = 443;
 
 var MESSAGE_TYPES = {
-  CLIENT: new _enum2.default(['SEND_OFFER', 'SEND_ANSWER', 'SEND_CANDIDATE', 'SEND_LEAVE', 'ROOM_JOIN', 'ROOM_LEAVE', 'ROOM_GET_LOGS', 'ROOM_GET_USERS', 'ROOM_SEND_DATA', 'SFU_GET_OFFER', 'SFU_ANSWER', 'SFU_CANDIDATE', 'PING', 'UPDATE_CREDENTIAL']),
-  SERVER: new _enum2.default(['OPEN', 'ERROR', 'OFFER', 'ANSWER', 'CANDIDATE', 'LEAVE', 'AUTH_EXPIRES_IN', 'ROOM_LOGS', 'ROOM_USERS', 'ROOM_DATA', 'ROOM_USER_JOIN', 'ROOM_USER_LEAVE', 'SFU_OFFER', 'UPDATE_ADMINS', 'UPDATE_OPERATORS', 'UPDATE_WORKERS'])
+  CLIENT: new _enum2.default(['SEND_OFFER', 'SEND_ANSWER', 'SEND_CANDIDATE', 'SEND_LEAVE', 'SEND_HANGUP', 'ROOM_JOIN', 'ROOM_LEAVE', 'ROOM_GET_LOGS', 'ROOM_GET_USERS', 'ROOM_SEND_DATA', 'SFU_GET_OFFER', 'SFU_ANSWER', 'SFU_CANDIDATE', 'PING', 'UPDATE_CREDENTIAL']),
+  SERVER: new _enum2.default(['OPEN', 'ERROR', 'OFFER', 'ANSWER', 'CANDIDATE', 'LEAVE', 'HANGUP', 'AUTH_EXPIRES_IN', 'ROOM_LOGS', 'ROOM_USERS', 'ROOM_DATA', 'ROOM_USER_JOIN', 'ROOM_USER_LEAVE', 'SFU_OFFER', 'UPDATE_ADMINS', 'UPDATE_OPERATORS', 'UPDATE_WORKERS'])
 };
 
 // Current recommended maximum chunksize is 16KB (DataChannel spec)
@@ -1860,7 +1860,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var ConnectionEvents = new _enum2.default(['candidate', 'offer', 'answer', 'close']);
+var ConnectionEvents = new _enum2.default(['candidate', 'offer', 'answer', 'close', 'hangup']);
 
 /**
  * Class that manages connections to other peers.
@@ -2032,6 +2032,23 @@ var Connection = function (_EventEmitter) {
     }
 
     /**
+     * Hang up the connection
+     * @fires Connection#hangup
+     */
+
+  }, {
+    key: 'hangup',
+    value: function hangup() {
+      var connectionHangup = {
+        dst: this.remoteId,
+        connectionId: this.id,
+        connectionType: this.type
+      };
+      this.emit(Connection.EVENTS.hangup.key, connectionHangup);
+      this.close();
+    }
+
+    /**
      * Disconnect from remote peer.
      * @fires Connection#close
      */
@@ -2163,6 +2180,16 @@ var Connection = function (_EventEmitter) {
      * @event Connection#answer
      * @type {object}
      * @property {RTCSessionDescription} answer - The local answer to send to the peer.
+     * @property {string} dst - Destination peerId
+     * @property {string} connectionId - This connection's id.
+     * @property {string} connectionType - This connection's type.
+     */
+
+    /**
+     * Hang up the connection event.
+     *
+     * @event Connection#hangup
+     * @type {object}
      * @property {string} dst - Destination peerId
      * @property {string} connectionId - This connection's id.
      * @property {string} connectionType - This connection's type.
@@ -7757,6 +7784,24 @@ var Peer = function (_EventEmitter) {
         }
       });
 
+      this.socket.on(_config2.default.MESSAGE_TYPES.SERVER.HANGUP.key, function (hangupMessage) {
+        // handle mesh room hangup
+        var roomName = hangupMessage.roomName;
+        if (roomName) {
+          // ToDo : handle mesh room hangup
+          return;
+        }
+
+        // handle p2p hangup
+        var connection = _this3.getConnection(hangupMessage.src, hangupMessage.connectionId);
+
+        if (connection) {
+          connection.close();
+        } else {
+          _this3._storeMessage(_config2.default.MESSAGE_TYPES.SERVER.HANGUP.key, hangupMessage);
+        }
+      });
+
       this.socket.on(_config2.default.MESSAGE_TYPES.SERVER.ROOM_USER_JOIN.key, function (roomUserJoinMessage) {
         var room = _this3.rooms[roomUserJoinMessage.roomName];
         if (room) {
@@ -7836,6 +7881,9 @@ var Peer = function (_EventEmitter) {
       });
       connection.on(_connection2.default.EVENTS.offer.key, function (offerMessage) {
         _this4.socket.send(_config2.default.MESSAGE_TYPES.CLIENT.SEND_OFFER.key, offerMessage);
+      });
+      connection.on(_connection2.default.EVENTS.hangup.key, function (hangupMessage) {
+        _this4.socket.send(_config2.default.MESSAGE_TYPES.CLIENT.SEND_HANGUP.key, hangupMessage);
       });
     }
 
@@ -8930,6 +8978,7 @@ var Socket = function (_EventEmitter) {
      * @fires Socket#ANSWER
      * @fires Socket#CANDIDATE
      * @fires Socket#LEAVE
+     * @fires Socket#HANGUP
      * @fires Socket#AUTH_EXPIRES_IN
      * @fires Socket#ROOM_OFFER
      * @fires Socket#ROOM_USER_JOIN

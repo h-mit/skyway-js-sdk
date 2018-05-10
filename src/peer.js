@@ -641,6 +641,33 @@ class Peer extends EventEmitter {
     );
 
     this.socket.on(
+      config.MESSAGE_TYPES.SERVER.HANGUP.key,
+      hangupMessage => {
+        // handle mesh room hangup
+        const roomName = hangupMessage.roomName;
+        if (roomName) {
+          // ToDo : handle mesh room hangup
+          return;
+        }
+
+        // handle p2p hangup
+        const connection = this.getConnection(
+          hangupMessage.src,
+          hangupMessage.connectionId
+        );
+
+        if (connection) {
+          connection.close();
+        } else {
+          this._storeMessage(
+            config.MESSAGE_TYPES.SERVER.HANGUP.key,
+            hangupMessage
+          );
+        }
+      }
+    );
+
+    this.socket.on(
       config.MESSAGE_TYPES.SERVER.ROOM_USER_JOIN.key,
       roomUserJoinMessage => {
         const room = this.rooms[roomUserJoinMessage.roomName];
@@ -737,6 +764,12 @@ class Peer extends EventEmitter {
       this.socket.send(
         config.MESSAGE_TYPES.CLIENT.SEND_OFFER.key,
         offerMessage
+      );
+    });
+    connection.on(Connection.EVENTS.hangup.key, hangupMessage => {
+      this.socket.send(
+        config.MESSAGE_TYPES.CLIENT.SEND_HANGUP.key,
+        hangupMessage
       );
     });
   }

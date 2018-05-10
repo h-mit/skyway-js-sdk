@@ -6,7 +6,13 @@ import util from '../shared/util';
 import logger from '../shared/logger';
 import config from '../shared/config';
 
-const ConnectionEvents = new Enum(['candidate', 'offer', 'answer', 'close']);
+const ConnectionEvents = new Enum([
+  'candidate',
+  'offer',
+  'answer',
+  'close',
+  'hangup',
+]);
 
 /**
  * Class that manages connections to other peers.
@@ -146,6 +152,20 @@ class Connection extends EventEmitter {
   }
 
   /**
+   * Hang up the connection
+   * @fires Connection#hangup
+   */
+  hangup() {
+    const connectionHangup = {
+      dst: this.remoteId,
+      connectionId: this.id,
+      connectionType: this.type,
+    };
+    this.emit(Connection.EVENTS.hangup.key, connectionHangup);
+    this.close();
+  }
+
+  /**
    * Disconnect from remote peer.
    * @fires Connection#close
    */
@@ -263,6 +283,16 @@ class Connection extends EventEmitter {
    * @event Connection#answer
    * @type {object}
    * @property {RTCSessionDescription} answer - The local answer to send to the peer.
+   * @property {string} dst - Destination peerId
+   * @property {string} connectionId - This connection's id.
+   * @property {string} connectionType - This connection's type.
+   */
+
+  /**
+   * Hang up the connection event.
+   *
+   * @event Connection#hangup
+   * @type {object}
    * @property {string} dst - Destination peerId
    * @property {string} connectionId - This connection's id.
    * @property {string} connectionType - This connection's type.
