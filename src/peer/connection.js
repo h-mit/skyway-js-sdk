@@ -170,9 +170,6 @@ class Connection extends EventEmitter {
    * @fires Connection#close
    */
   close() {
-    if (!this.open) {
-      return;
-    }
     this.open = false;
     this._negotiator.cleanup();
     this.emit(Connection.EVENTS.close.key);
